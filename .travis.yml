@@ -1,4 +1,7 @@
-sudo: false
+sudo: required
+
+services:
+  - docker
 
 language: c
 
@@ -25,3 +28,16 @@ addons:
 
 script:
   - stack test --allow-different-user --no-terminal --ghc-options -Wall
+
+after_script:
+  # set the path to the binary
+  - mkdir -p .publish
+  - BINARY=$(stack path --local-install-root)/bin/evaporate
+  - cp $BINARY .publish
+  - VERSION=$(cat evaporate.cabal | awk '/^version:\s+([[:digit:]]\.[[:digit:]]\.[[:digit:]]\.[[:digit:]]/{print $2}')
+  - echo "Building docker container for version $VERSION"
+  - docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+  - docker build --file build-publish.dockerfile -t evaporate
+  - docker tag evaporate "evaporate/evaporate:$VERSION"
+  - echo "Pushing docker image evaporate:$VERSION"
+  - docker push evaporate/evaporate
