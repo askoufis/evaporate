@@ -38,6 +38,6 @@ after_script:
   - echo "Building docker container for version $VERSION"
   - docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
   - docker build --file build-publish.dockerfile -t evaporate .
-  - docker tag evaporate "evaporate/evaporate:$VERSION"
+  - docker tag evaporate "askoufis/evaporate:$VERSION"
   - echo "Pushing docker image evaporate:$VERSION"
-  - docker push evaporate/evaporate
+  - docker push askoufis/evaporate
