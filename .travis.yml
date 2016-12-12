@@ -14,6 +14,7 @@ cache:
 
 before_install:
   # Download and unpack the stack executable
+  - set -e
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH
   - export PATH=/opt/ghc/8.0.1/bin:$PATH
@@ -27,7 +28,6 @@ addons:
     - ghc-8.0.1
 
 script:
-  - set -e
   - stack test --allow-different-user --no-terminal --ghc-options -Wall
 
 after_script:
