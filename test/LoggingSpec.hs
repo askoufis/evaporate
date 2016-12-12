@@ -3,6 +3,8 @@ module LoggingSpec (spec, main) where
 import Control.Monad.Except (runExceptT)
 import Data.Either.Combinators (fromRight')
 import Data.Monoid ((<>))
+import Network.AWS.S3.Types (BucketName(..))
+import Network.AWS.Types (Region(..))
 import Test.Hspec ( describe
                   , context
                   , shouldBe
@@ -18,6 +20,7 @@ import Logging ( logMain
                , logStackName
                , logExecution
                , logStackOutputs
+               , logFileUpload
                , filterBuilderBy
                , LogParameters(..)
                )
@@ -36,26 +39,27 @@ spec = describe "LoggingSpec" $ do
       stackParams <- runExceptT . getStackParameters $ "test/valid.yaml"
       let descriptions = fromRight' stackParams
       let accountID = "478156153062"
-      let logParams = LogParameters Create descriptions accountID
+      let logParams = LogParameters Create descriptions accountID Sydney
       let logMessage = logMain logParams
       logMessage `shouldBe`
            "\nCommand being executed: "
         <> "Create"
         <> "\nAWS Account ID: "
         <> "478156153062"
+        <> "\nRegion: ap-southeast-2"
         <> "\nStack(s) being operated on:"
         <> "\n    Stack1"
         <> "\n    Stack2"
 
     it "can generate a general log message" $ do
       let accountID = "478156153062"
-      let logMessage = logGeneral Create accountID
+      let logMessage = logGeneral Create accountID Sydney
       logMessage `shouldBe`
            "\nCommand being executed: "
         <> "Create"
         <> "\nAWS Account ID: "
         <> "478156153062"
-        <> "\nStack(s) being operated on:"
+        <> "\nRegion: ap-southeast-2"
 
     it "can generate a stack name log message" $ do
       stackParams <- runExceptT . getStackParameters $ "test/valid.yaml"
@@ -84,6 +88,15 @@ spec = describe "LoggingSpec" $ do
            "Stack outputs:\n"
         <> "Stack name: myStack, Output name: myOutput1, Output value: OutputValue1\n"
         <> "Stack name: myStack, Output name: myOutput2, Output value: OutputValue2\n"
+
+    it "can generate a file upload log message" $ do
+      let filePath = "myFolder/myFile.txt"
+      let myAltPath = "folder/myFile.txt"
+      let bucketName = BucketName "myBucket"
+      logFileUpload filePath myAltPath bucketName `shouldBe`
+           "Uploading myFolder/myFile.txt"
+        <> " as folder/myFile.txt"
+        <> " to myBucket"
 
     it "logs properly when there are no stack outputs" $ do
       let stackOutputs = Nothing

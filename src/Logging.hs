@@ -8,7 +8,9 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 import           Data.Monoid ((<>))
 import           Data.Text (Text, unpack, pack)
 import           Data.Text.Encoding (encodeUtf8)
-import           Network.AWS.Types (Logger, LogLevel(..))
+import           Network.AWS.Data.Text (toText)
+import           Network.AWS.S3.Types (BucketName(..))
+import           Network.AWS.Types (Logger, Region, LogLevel(..))
 import           System.Log.Logger (infoM)
 import           System.IO (hSetBinaryMode, hSetBuffering, Handle, BufferMode(..))
 
@@ -23,9 +25,10 @@ import           Types ( AWSAccountID
 type Filters = [Text]
 
 data LogParameters = LogParameters
-  { logCommand           :: Command
-  , logStackDescriptions :: [StackDescription]
-  , logAwsAccountID      :: AWSAccountID }
+  { _lpCommand           :: Command
+  , _lpStackDescriptions :: [StackDescription]
+  , _lpAwsAccountID      :: AWSAccountID
+  , _lpRegion            :: Region }
 
 -- General logging function
 logEvaporate :: MonadIO m => Text -> m ()
@@ -33,8 +36,9 @@ logEvaporate = liftIO . infoM "EvaporateLogger" . unpack
 
 logMain :: LogParameters -> Text
 logMain LogParameters{..} =
-     logGeneral logCommand logAwsAccountID
-  <> mconcat (fmap logStackName logStackDescriptions)
+     logGeneral _lpCommand _lpAwsAccountID _lpRegion
+  <> "\nStack(s) being operated on:"
+  <> mconcat (fmap logStackName _lpStackDescriptions)
 
 logStackOutputs :: Maybe StackOutputs -> Text
 logStackOutputs (Just stackOutputs) =
@@ -47,13 +51,14 @@ logStackOutputs (Just stackOutputs) =
        <> "Output value: " <> stackOutputValue <> "\n"
 logStackOutputs Nothing = "Stack outputs: None"
 
-logGeneral :: Command -> AWSAccountID -> Text
-logGeneral command accountID =
+logGeneral :: Command -> AWSAccountID -> Region -> Text
+logGeneral command accountID region =
      "\nCommand being executed: "
   <> (pack . show $ command)
   <> "\nAWS Account ID: "
   <> accountID
-  <> "\nStack(s) being operated on:"
+  <> "\nRegion: "
+  <> toText region
 
 logStackName :: StackDescription -> Text
 logStackName StackDescription{..} =
@@ -66,6 +71,12 @@ logExecution command StackName{..} =
   <> " on "
   <> getStackName
   <> "...\n"
+
+logFileUpload :: Text -> Text -> BucketName -> Text
+logFileUpload filePath altFilePath (BucketName bucketName) =
+     "Uploading " <> filePath
+  <> " as "       <> altFilePath
+  <> " to "       <> bucketName
 
 -- Based off the amazonka logger
 customLogger :: MonadIO m => LogLevel -> Handle -> Filters -> m Logger

@@ -2,6 +2,7 @@
 module Zip( inlineZips
           , writeZips
           , writeZip
+          , writeFolderToZip
           ) where
 
 import           Codec.Archive.Zip ( addFilesToArchive
@@ -23,17 +24,16 @@ import           Data.Tuple.Extra ((***))
 import           System.Directory ( removeFile
                                   , doesDirectoryExist
                                   , doesFileExist
-                                  , listDirectory
                                   )
 import           System.FilePath ( takeFileName
                                  , dropTrailingPathSeparator
-                                 , joinPath
                                  )
 import           System.IO.Error (isDoesNotExistError)
 
 import           Logging (logEvaporate)
 import           StackParameters (paths, BucketFiles(..))
 import           Types (FileOrFolderDoesNotExist(..))
+import           Utils (getFilesFromFolder)
 
 inlineZips :: BucketFiles -> BucketFiles
 inlineZips bucketFiles@BucketFiles{..} =
@@ -81,9 +81,8 @@ writeFileToZip path nameOfZip = do
 
 writeFolderToZip :: FilePath -> FilePath -> IO ()
 writeFolderToZip path nameOfZip = do
-  directoryFiles <- (fmap . fmap) (\x -> [path, x]) (listDirectory path)
-  let relativeFilePaths = fmap joinPath directoryFiles
+  directoryFiles <- getFilesFromFolder path
   archive <- addFilesToArchive
-    [OptRecursive, OptLocation "." False] emptyArchive relativeFilePaths
+    [OptRecursive, OptLocation "." False] emptyArchive directoryFiles
   logEvaporate $ "Zipping " <> pack path
   BS.writeFile nameOfZip (fromArchive archive)
