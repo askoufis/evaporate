@@ -17,8 +17,9 @@ before_install:
   - set -e
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH
-  - export PATH=/opt/ghc/8.0.1/bin:$PATH
   - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+  - stack config set system-ghc --global true
+  - export PATH=/opt/ghc/8.0.1/bin:$PATH
 
 addons:
   apt:
@@ -28,7 +29,7 @@ addons:
     - ghc-8.0.1
 
 script:
-  - stack test --allow-different-user --no-terminal --resolver lts-7.6 --ghc-options -Wall
+  - stack test --allow-different-user --no-terminal --ghc-options -Wall
 
 after_script:
   # set the path to the binary
