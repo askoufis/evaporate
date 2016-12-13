@@ -3,30 +3,35 @@ sudo: required
 services:
   - docker
 
-language: c
+language: generic
 
 # Caching so the next build will be fast too
 cache:
   directories:
-  - $HOME/.ghc
-  - $HOME/.cabal
   - $HOME/.stack
 
+addons:
+  apt:
+    packages:
+      - libgmp-dev
 before_install:
-  # Download and unpack the stack executable
-  - set -e
-  - mkdir -p ~/.local/bin
-  - export PATH=$HOME/.local/bin:$PATH
-  - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
-  - export PATH=/opt/ghc/8.0.1/bin:$PATH
+# Download and unpack the stack executable
+- set -e
+- mkdir -p ~/.local/bin
+- export PATH=$HOME/.local/bin:$PATH
+- travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+
+install:
+# Build dependencies
+- stack test --no-terminal --install-ghc --only-dependencies
 
 script:
-  - stack setup
-  - stack test --allow-different-user --no-terminal --ghc-options -Wall
+# Build the package, its tests, and its docs and run the tests
+- stack test --no-terminal --ghc-options -Wall
 
 after_script:
-  # set the path to the binary
   - mkdir -p .publish
+  # Set the path to the binary
   - BINARY=$(stack path --local-install-root)/bin/evaporate
   - cp $BINARY .publish
   - VERSION=$(cat evaporate.cabal | awk '/^version:\s+([[:digit:]]\.[[:digit:]]\.[[:digit:]]\.[[:digit:]])/{print $2}')
