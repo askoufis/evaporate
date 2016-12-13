@@ -29,6 +29,7 @@ addons:
     - ghc-8.0.1
 
 script:
+  - stack setup
   - stack test --allow-different-user --no-terminal --ghc-options -Wall
 
 after_script:
