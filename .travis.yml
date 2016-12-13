@@ -28,7 +28,7 @@ addons:
     - ghc-8.0.1
 
 script:
-  - stack test --allow-different-user --no-terminal --resolver lts7.6 --ghc-options -Wall
+  - stack test --allow-different-user --no-terminal --resolver lts-7.6 --ghc-options -Wall
 
 after_script:
   # set the path to the binary
