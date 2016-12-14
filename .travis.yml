@@ -42,10 +42,10 @@ install:
 script:
   # Build the package, its tests, and its docs and run the tests
   - stack test --no-terminal --ghc-options -Wall
-
-before_deploy:
   - BINARY=$(stack path --local-install-root)/bin/evaporate;
   - VERSION=$(cat evaporate.cabal | awk '/^version:\s+([[:digit:]]\.[[:digit:]]\.[[:digit:]]\.[[:digit:]])/{print $2}');
+
+before_deploy:
   - ZIP_NAME=evaporate-$TRAVIS_OS_NAME-v$VERSION.zip
   - zip $ZIP_NAME $BINARY README.md
 
@@ -55,6 +55,8 @@ deploy:
   skip_cleanup: true
   file: $ZIP_NAME
   # branch: master
+  # on:
+  #   tags: true
 
 after_script:
   # - if [[ "$TRAVIS_BRANCH" == "master" ]] && [[ "$TRAVIS_OS_NAME" == "linux"]]; then

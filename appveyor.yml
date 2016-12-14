@@ -1,0 +1,16 @@
+cache:
+  - "c:\\sr -> stack.yaml"
+
+before_test:
+  - curl -sS -ostack.zip -L --insecure http://www.stackage.org/stack/windows-x86_64
+  - 7z x stack.zip stack.exe
+
+clone_folder: "c:\\project"
+
+environment:
+  global:
+    STACK_ROOT: "c:\\sr"
+
+test_script:
+  - stack test --no-terminal --install-ghc --only-dependencies
+  - stack test --no-terminal --ghc-options -Wall
