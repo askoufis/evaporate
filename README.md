@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/adamsko15/evaporate.svg?branch=master)](https://travis-ci.org/adamsko15/evaporate)
+
 ## Evaporate
 
 Evaporate is a simple CloudFormation Stack deployment tool.

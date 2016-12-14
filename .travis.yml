@@ -21,17 +21,17 @@ addons:
 
 before_install:
   - set -e
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update      ; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install gmp ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update      ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install gmp ; fi
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH
   # Download and unpack the stack executable
   # Could use $TRAVIS_OS_NAME to get the right stack executable but it's
   # probably better not to rely on that env var too much
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
     travis_retry curl -L https://www.stackage.org/stack/osx-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack';
     fi
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
     travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack';
     fi
 
@@ -54,11 +54,11 @@ deploy:
   api_key: $GITHUB_OAUTH_TOKEN
   skip_cleanup: true
   file: $ZIP_NAME
-  branch: master
+  # branch: master
 
 after_script:
-  # - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_OS_NAME" == "linux"]; then
-  - if [ "$TRAVIS_OS_NAME" == "linux"]; then
+  # - if [[ "$TRAVIS_BRANCH" == "master" ]] && [[ "$TRAVIS_OS_NAME" == "linux"]]; then
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
     mkdir -p .publish;
     cp $BINARY .publish;
     echo "Building docker container for version $VERSION";
