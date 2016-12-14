@@ -54,27 +54,15 @@ spec = describe "ZipSpec" $ do
 
     it "file in folder in empty root path" $ do
       let rootPath = ""
-<<<<<<< HEAD
-      let path = "folder/file.txt"
-=======
       let path = "folder" </> "file.txt"
->>>>>>> c49cc2d76f420fa6c3b3b8a6ec73e1728ce654e2
       getPathInArchive rootPath path `shouldBe` "folder"
 
     it "file in folder root path" $ do
       let rootPath = "folder"
-<<<<<<< HEAD
-      let path = "folder/file.txt"
-=======
       let path = "folder" </> "file.txt"
->>>>>>> c49cc2d76f420fa6c3b3b8a6ec73e1728ce654e2
       getPathInArchive rootPath path `shouldBe` ""
 
     it "file in folder in folder root path" $ do
       let rootPath = "folder"
-<<<<<<< HEAD
-      let path = "folder/folder2/file.txt"
-=======
       let path = "folder" </> "folder2" </> "file.txt"
->>>>>>> c49cc2d76f420fa6c3b3b8a6ec73e1728ce654e2
       getPathInArchive rootPath path `shouldBe` "folder2"
