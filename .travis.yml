@@ -1,0 +1,45 @@
+sudo: required
+
+services:
+  - docker
+
+language: generic
+
+# Caching so the next build will be fast too
+cache:
+  directories:
+  - $HOME/.stack
+
+addons:
+  apt:
+    packages:
+      - libgmp-dev
+
+before_install:
+# Download and unpack the stack executable
+- set -e
+- mkdir -p ~/.local/bin
+- export PATH=$HOME/.local/bin:$PATH
+- travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+
+install:
+# Build dependencies
+- stack test --no-terminal --install-ghc --only-dependencies
+
+script:
+# Build the package, its tests, and its docs and run the tests
+- stack test --no-terminal --ghc-options -Wall
+
+after_script:
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+    mkdir -p .publish;
+    BINARY=$(stack path --local-install-root)/bin/evaporate;
+    cp $BINARY .publish;
+    VERSION=$(cat evaporate.cabal | awk '/^version:\s+([[:digit:]]\.[[:digit:]]\.[[:digit:]]\.[[:digit:]])/{print $2}');
+    echo "Building docker container for version $VERSION";
+    docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+    docker build --file build-publish.dockerfile -t evaporate .;
+    docker tag evaporate "askoufis/evaporate:$VERSION";
+    echo "Pushing docker image evaporate:$VERSION";
+    docker push askoufis/evaporate;
+    fi

@@ -1,7 +1,10 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE ViewPatterns #-}
 module Zip( inlineZips
           , writeZips
           , writeZip
+          , writeFileOrFolderToZip
+          , getPathInArchive
           ) where
 
 import           Codec.Archive.Zip ( addFilesToArchive
@@ -10,30 +13,30 @@ import           Codec.Archive.Zip ( addFilesToArchive
                                    , ZipOption(..)
                                    )
 import           Control.Exception.Safe (catch, throwM, MonadThrow)
-import           Control.Monad (when, void)
+import           Control.Monad (when, void, foldM)
 import           Control.Monad.IO.Class (MonadIO(..))
 import           Control.Monad.Trans.Resource (register, MonadResource(..))
 import           Control.Lens ((&), (.~))
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.HashMap.Lazy as HashMap
+import           Data.List (stripPrefix)
+import           Data.Maybe (fromMaybe)
 import           Data.Monoid ((<>))
 import           Data.Text (pack, unpack, Text)
 import           Data.Foldable (traverse_)
 import           Data.Tuple.Extra ((***))
-import           System.Directory ( removeFile
-                                  , doesDirectoryExist
-                                  , doesFileExist
-                                  , listDirectory
-                                  )
+import           System.Directory (removeFile)
 import           System.FilePath ( takeFileName
+                                 , takeDirectory
                                  , dropTrailingPathSeparator
-                                 , joinPath
+                                 , addTrailingPathSeparator
                                  )
 import           System.IO.Error (isDoesNotExistError)
 
-import           Logging (logEvaporate)
+import           Logging (logEvaporate, logZip)
 import           StackParameters (paths, BucketFiles(..))
-import           Types (FileOrFolderDoesNotExist(..))
+import           Types (PathType(..))
+import           Utils (getFilesFromFolder, checkPath)
 
 inlineZips :: BucketFiles -> BucketFiles
 inlineZips bucketFiles@BucketFiles{..} =
@@ -64,26 +67,26 @@ writeZips BucketFiles{..} =
 
 writeZip :: (MonadThrow m, MonadResource m) => Text -> m ()
 writeZip pathToFile = do
-  let stringPath = unpack pathToFile
-  let nameOfZip = (takeFileName . dropTrailingPathSeparator $ stringPath) <> ".zip"
+  let stringPath = dropTrailingPathSeparator . unpack $ pathToFile
+  let nameOfZip = takeFileName stringPath <> ".zip"
   void . register $ deleteFileIfExists nameOfZip
-  (liftIO . doesDirectoryExist) stringPath >>= \case
-    True -> liftIO . writeFolderToZip stringPath $ nameOfZip
-    False -> (liftIO . doesFileExist) stringPath >>= \case
-      True -> liftIO . writeFileToZip stringPath $ nameOfZip
-      False -> throwM $ FileOrFolderDoesNotExist pathToFile
+  checkPath stringPath >>= \case
+    File      f -> liftIO $ writeFileOrFolderToZip nameOfZip (takeDirectory f) [f]
+    Directory d -> liftIO $ getFilesFromFolder d >>= writeFileOrFolderToZip nameOfZip d
 
-writeFileToZip :: FilePath -> FilePath -> IO ()
-writeFileToZip path nameOfZip = do
-  archive <- addFilesToArchive [OptRecursive] emptyArchive [path]
-  logEvaporate $ "Zipping " <> pack path
+writeFileOrFolderToZip :: FilePath -> FilePath -> [FilePath] -> IO ()
+writeFileOrFolderToZip nameOfZip rootPath filePaths = do
+  archive <- foldM folder emptyArchive filePaths
+  logEvaporate $ logZip nameOfZip filePaths
   BS.writeFile nameOfZip (fromArchive archive)
+  where
+    folder archive path = do
+      let zipPath = getPathInArchive rootPath path
+      addFilesToArchive [OptLocation zipPath False] archive [path]
 
-writeFolderToZip :: FilePath -> FilePath -> IO ()
-writeFolderToZip path nameOfZip = do
-  directoryFiles <- (fmap . fmap) (\x -> [path, x]) (listDirectory path)
-  let relativeFilePaths = fmap joinPath directoryFiles
-  archive <- addFilesToArchive
-    [OptRecursive, OptLocation "." False] emptyArchive relativeFilePaths
-  logEvaporate $ "Zipping " <> pack path
-  BS.writeFile nameOfZip (fromArchive archive)
+getPathInArchive :: FilePath -> FilePath -> FilePath
+getPathInArchive rootPath (takeDirectory -> pathDirectory) =
+  let pathDirectory' = if pathDirectory == "." then "" else pathDirectory
+  in if rootPath /= ""
+    then fromMaybe "" $ stripPrefix (addTrailingPathSeparator rootPath) pathDirectory'
+    else pathDirectory'

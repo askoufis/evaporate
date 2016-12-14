@@ -9,16 +9,18 @@ import           Control.Exception.Safe ( throwM
                                         , MonadThrow
                                         , Exception(..)
                                         )
-import           Control.Lens ((&), (<&>), (.~), (<>~))
+import           Control.Lens ((&), (<&>), (.~), (<>~), (^.))
 import           Control.Monad (void, when)
 import           Control.Monad.IO.Class (MonadIO(..))
 import           Control.Monad.Reader.Class (asks, local)
 import           Control.Monad.Trans.AWS ( newEnv
                                          , runResourceT
                                          , runAWST
+                                         , envRegion
                                          , AWSConstraint
                                          , Credentials(Discover)
                                          )
+import           Control.Monad.Trans.Resource (MonadBaseControl)
 import           Data.Foldable (traverse_)
 import qualified Data.HashMap.Strict as HashMap
 import           Data.Text (pack, Text)
@@ -94,13 +96,14 @@ execute Options{..} = do
     awsAccountID <- getAccountID
     stackDependencyGraph <- makeStackDependencyGraph stackDescriptions awsAccountID
     orderedStackDescriptions <- determineStackOrdering stackDependencyGraph
-    logEvaporate . logMain $ LogParameters command orderedStackDescriptions awsAccountID
+    logEvaporate . logMain . LogParameters
+      command orderedStackDescriptions awsAccountID $ awsEnv ^. envRegion
     if isDryRun then
       logEvaporate "Dry run enabled. No commands will be executed."
     else
       void $ processStacks command awsAccountID orderedStackDescriptions stackNameOption
 
-processStacks :: forall m. (AWSConstraint Context m)
+processStacks :: forall m. (AWSConstraint Context m, MonadBaseControl IO m)
               => Command
               -> AWSAccountID
               -> [StackDescription]

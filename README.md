@@ -143,13 +143,23 @@ as well as the files/folders to be uploaded.
 s3upload:
 - bucket-name: bucket1
   paths:
-    folder/file.txt: "folder/anotherFolder/file.txt"
+    folder/file.txt: folder/anotherFolder/file.txt
 ```
 
-The key specifies the path to the file and the value is the path the file will
-appear at in the bucket. This is useful for altering the structure of files in
-the bucket without having to mirror that structure locally. The value may also
-be left empty:
+If the key is a file, then the value will be the path the file will appear at in
+the bucket. If the key is a folder, then the value will be the path to that
+folder in the bucket. For example:
+
+```
+paths:
+  folder: myFolder
+```
+
+This would upload all the files within `folder` but they would be under the
+`myFolder` folder in the bucket.
+
+This is useful for altering the structure of files in the bucket without having
+to mirror that structure locally. The value may also be left empty:
 
 ```
 paths:
@@ -248,29 +258,30 @@ s3upload:
 - bucket-name: lambdaBucket
   zip: true
   paths:
-    path/to/sourceFile2.py: sourceFile2.py
-    path/to/sourceFolder2: sourceFolder2
+    - path/to/sourceFile2.py
+    - path/to/sourceFolder2
 ```
 
 would result in the following files being uploaded to the root folder of the
 `lambdaBucket` s3 bucket:
 ```
 sourceFile1.py.zip
+  - sourceFile1.py
 sourceFolder1.zip
+  - contents of sourceFolder1
 sourceFile2.py.zip
+  - sourceFile2.py
 sourceFolder2.zip
+  - contents of sourceFolder2
 ```
-
-*NB:* When zipping a folder, the root of the archive will contain the contents
-of that folder, not the folder by itself.
-
-*NB:* The `.zip` suffix will be added to the alternate file path so there is no
-need to explicitly name the alternate path `path/to/file.zip` as this will
-result in a file called `file.zip.zip`.
 
 Both the `hash` and `zip` flag can be used together. This will yield the same
 result as having just the `zip` flag, except all file paths will be
 prefixed with the hash of their contents.
+
+*NB:* The `.zip` suffix will be added to the alternate file path so there is no
+need to explicitly name the alternate path `path/to/file.zip` as this will
+result in a file called `file.zip.zip`.
 
 #### Capabilities
 
