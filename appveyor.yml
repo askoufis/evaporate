@@ -28,7 +28,7 @@ test_script:
 #   provider: GitHub
 #   auth_token:
 #     secure: vQzw4N48UO9xekaqPdGR9mxKMlqUhT9cJGTkLWuS6ldXPBi+z4NEsN8csj4PJke2
-#   artifact:
+#   artifact: zip file
 #   draft: true
 #   on:
 #     branch: master
