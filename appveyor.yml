@@ -12,7 +12,8 @@ environment:
     STACK_ROOT: "c:\\sr"
 
 test_script:
-  - stack test --no-terminal --install-ghc --only-dependencies
+  # - stack test --no-terminal --install-ghc --only-dependencies
+  - stack setup > nul
   - stack test --no-terminal --ghc-options -Wall
 
 build: off

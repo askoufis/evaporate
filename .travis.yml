@@ -1,8 +1,8 @@
 sudo: required
 
-os:
-  - linux
-  - osx
+# os:
+#   - linux
+#   - osx
 
 services:
   - docker
@@ -54,12 +54,14 @@ deploy:
   api_key: $GITHUB_OAUTH_TOKEN
   skip_cleanup: true
   file: $ZIP_NAME
+  all_branches: true
+
   # branch: master
   # on:
   #   tags: true
 
 after_script:
-  - if [[ "$TRAVIS_BRANCH" == "master" ]] && [[ "$TRAVIS_OS_NAME" == "linux"]]; then
+  - if [[ "$TRAVIS_BRANCH" == "master" ]] && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
     mkdir -p .publish;
     cp $BINARY .publish;
     echo "Building docker container for version $VERSION";
