@@ -1,7 +1,7 @@
 cache:
   - "c:\\sr -> stack.yaml"
 
-before_test:
+install:
   - curl -sS -ostack.zip -L --insecure http://www.stackage.org/stack/windows-x86_64
   - 7z x stack.zip stack.exe
 
@@ -14,3 +14,5 @@ environment:
 test_script:
   - stack test --no-terminal --install-ghc --only-dependencies
   - stack test --no-terminal --ghc-options -Wall
+
+build: off
