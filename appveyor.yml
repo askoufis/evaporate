@@ -12,8 +12,26 @@ environment:
     STACK_ROOT: "c:\\sr"
 
 test_script:
-  # - stack test --no-terminal --install-ghc --only-dependencies
   - stack setup > nul
   - stack test --no-terminal --ghc-options -Wall
+
+# before_deploy:
+#   - ps: $BINARY = & stack path --local-install-root
+#   - ps: $BINARY += "\\bin\\evaporate.exe"
+#   -
+#   - d
+#   - 7z a -tzip README.md $BINARY
+#
+# deploy:
+#   release: Evaporate
+#   description: 'See CHANGELOG.md for changes'
+#   provider: GitHub
+#   auth_token:
+#     secure: vQzw4N48UO9xekaqPdGR9mxKMlqUhT9cJGTkLWuS6ldXPBi+z4NEsN8csj4PJke2
+#   artifact:
+#   draft: true
+#   on:
+#     branch: master
+#     appveyor_repo_tag: true
 
 build: off
