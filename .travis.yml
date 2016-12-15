@@ -54,7 +54,8 @@ deploy:
   api_key: $GITHUB_OAUTH_TOKEN
   skip_cleanup: true
   file: $ZIP_NAME
-  branch: travis-test2 
+  on:
+    branch: travis-test2
 
   # branch: master
   # on:
