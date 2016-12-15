@@ -47,7 +47,8 @@ script:
 
 before_deploy:
   - ZIP_NAME=evaporate-$TRAVIS_OS_NAME-v$VERSION.zip
-  - zip $ZIP_NAME $BINARY README.md
+  - cp $BINARY .
+  - zip $ZIP_NAME evaporate README.md
 
 deploy:
   provider: releases
@@ -55,11 +56,7 @@ deploy:
   skip_cleanup: true
   file: $ZIP_NAME
   on:
-    branch: travis-test2
-
-  # branch: master
-  # on:
-  #   tags: true
+    tags: true
 
 after_script:
   - if [[ "$TRAVIS_BRANCH" == "master" ]] && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
